@@ -1,7 +1,7 @@
 // Dimensions du modèle, exprimées en millimètres (1 unité Three.js = 1 mm).
 // Ces valeurs sont choisies pour rester lisibles et imprimables en FDM.
 export const DIMS = {
-  bubbleWidth: 70, // largeur de la bulle (fixe ; la hauteur s'adapte au message)
+  bubbleWidth: 88, // largeur de la bulle (fixe ; la hauteur s'adapte au message)
   minBubbleHeight: 26, // hauteur minimale (messages courts)
   maxBubbleHeight: 130, // hauteur maximale (garde-fou)
   cornerRadius: 4, // rayon des coins arrondis
