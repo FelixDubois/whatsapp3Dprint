@@ -71,11 +71,22 @@ export function measureContent(fontRegular, fontBold, interiorWidth, params) {
     if (w > interiorWidth) nameGeo.scale(interiorWidth / w, interiorWidth / w, 1);
   }
 
-  // Message : autant de lignes que nécessaire (pas de limite verticale ici)
+  // Message : on respecte d'abord les retours à la ligne manuels (\n), puis on
+  // découpe chaque paragraphe en autant de lignes que nécessaire. Une ligne
+  // vide (null) est conservée pour reproduire les sauts de ligne.
   let lineGeos = [];
   if (params.message) {
-    const lines = wrapText(fontRegular, params.message, MSG_SIZE, interiorWidth, 999);
-    lineGeos = lines.map((l) => createTextGeometry(fontRegular, l, MSG_SIZE));
+    const out = [];
+    for (const para of params.message.split('\n')) {
+      if (para.trim() === '') {
+        out.push(null); // ligne vide
+        continue;
+      }
+      for (const line of wrapText(fontRegular, para, MSG_SIZE, interiorWidth, 999)) {
+        out.push(createTextGeometry(fontRegular, line, MSG_SIZE));
+      }
+    }
+    lineGeos = out;
   }
 
   // Date + heure (une seule ligne)
@@ -102,6 +113,8 @@ export function measureContent(fontRegular, fontBold, interiorWidth, params) {
 
 // PHASE 2 — Placement : positionne les géométries mesurées dans le repère de la
 // bulle (dont la hauteur a été calculée à partir de content.totalHeight).
+// Retourne { name, body } : le nom est séparé pour pouvoir recevoir sa propre
+// couleur ; body regroupe le message et l'horodatage.
 export function placeTexts(content, bounds) {
   const { left, right, top, bottom } = bounds;
   const { padTop, padRight, padBottom, padLeft } = DIMS;
@@ -112,9 +125,8 @@ export function placeTexts(content, bounds) {
   const interiorBottom = bottom + padBottom;
 
   const zOffset = DIMS.baseThickness - DIMS.embossSink;
-  const geometries = [];
 
-  // Place une géométrie via sa bounding box, en alignant un coin de référence.
+  // Translate une géométrie via sa bounding box, en alignant un coin de référence.
   const place = (geo, { x, y, align = 'tl' }) => {
     geo.computeBoundingBox();
     const bb = geo.boundingBox;
@@ -127,21 +139,24 @@ export function placeTexts(content, bounds) {
       ty = y - bb.min.y;
     }
     geo.translate(tx, ty, zOffset);
-    geometries.push(geo);
+    return geo;
   };
+
+  let name = null;
+  const body = [];
 
   let y = interiorTop;
   if (content.nameGeo) {
-    place(content.nameGeo, { x: interiorLeft, y, align: 'tl' });
+    name = place(content.nameGeo, { x: interiorLeft, y, align: 'tl' });
     y -= NAME_SIZE + (content.lineGeos.length ? GAP_AFTER_NAME : 0);
   }
   for (const geo of content.lineGeos) {
-    place(geo, { x: interiorLeft, y, align: 'tl' });
-    y -= MSG_LINE_HEIGHT;
+    if (geo) body.push(place(geo, { x: interiorLeft, y, align: 'tl' }));
+    y -= MSG_LINE_HEIGHT; // on avance même pour une ligne vide
   }
   if (content.stampGeo) {
-    place(content.stampGeo, { x: interiorRight, y: interiorBottom, align: 'br' });
+    body.push(place(content.stampGeo, { x: interiorRight, y: interiorBottom, align: 'br' }));
   }
 
-  return geometries;
+  return { name, body };
 }

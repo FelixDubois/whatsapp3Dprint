@@ -1,8 +1,10 @@
 # Porte-clé WhatsApp 3D
 
 Générateur web qui transforme un message WhatsApp en porte-clé imprimable en 3D.
-On personnalise le **nom**, le **message**, l'**heure** et la **date**, on
-prévisualise le modèle en direct, puis on télécharge le fichier **STL**.
+On personnalise le **nom** (avec une **couleur au choix** parmi une dizaine), le
+**message** (les **retours à la ligne** sont respectés), l'**heure** et la
+**date**, on prévisualise le modèle en direct, puis on télécharge le fichier
+**STL**.
 
 Le modèle reprend la forme d'une bulle de message : coins arrondis, petite
 **queue** WhatsApp et **trou** en haut à droite pour y accrocher un anneau. La
@@ -47,7 +49,7 @@ docker run -p 8080:80 porte-cle-whatsapp   # http://localhost:8080
 - **Télécharger STL** : un seul fichier, toutes les pièces fusionnées. Idéal pour
   une impression monochrome, ou pour des couleurs via un changement de filament
   par hauteur (le texte et la photo sont en saillie au-dessus de la plaque).
-- **Télécharger STL par couleur** : trois fichiers (`base`, `photo`, `texte`)
+- **Télécharger STL par couleur** : trois fichiers (`base`, `nom`, `texte`)
   pour les imprimantes multi-matériaux (AMS/MMU), à assigner chacun à une couleur.
 
 Le modèle est conçu pour l'impression FDM (1 unité = 1 mm) : trou réellement

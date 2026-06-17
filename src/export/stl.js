@@ -25,18 +25,19 @@ function download(data, filename) {
 // fusionnées). Idéal pour une impression monochrome ou un changement de
 // filament par hauteur.
 export function exportSingleStl(exportParts, filename = 'porte-cle-whatsapp.stl') {
-  const parts = [exportParts.base, exportParts.photo, exportParts.texte].filter(Boolean);
+  const parts = [exportParts.base, exportParts.nom, exportParts.texte].filter(Boolean);
   if (parts.length === 0) return;
   const merged = mergeGeometries(parts, false);
   download(geometryToStl(merged), filename);
   merged.dispose();
 }
 
-// Exporte un fichier STL par couleur (base / texte) pour les imprimantes
+// Exporte un fichier STL par couleur (base / nom / texte) pour les imprimantes
 // multi-matériaux (AMS/MMU).
 export function exportPerColorStl(exportParts) {
   const map = {
     base: 'porte-cle-base.stl',
+    nom: 'porte-cle-nom.stl',
     texte: 'porte-cle-texte.stl',
   };
   for (const [key, name] of Object.entries(map)) {

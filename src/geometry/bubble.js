@@ -48,9 +48,16 @@ export function buildBubble(height) {
   shape.absarc(right - r, top - r, r, 0, Math.PI / 2, false);
   shape.lineTo(left + tailTopBase, top); // bord supérieur jusqu'à la base de la queue
 
-  // Queue WhatsApp : pointe vers le haut-gauche puis retour courbé sur le bord gauche.
-  shape.lineTo(left - tailOut, top + tailUp); // diagonale vers la pointe
-  shape.quadraticCurveTo(left, top, left, top - tailSideBase); // retour courbé vers le bord gauche
+  // Queue WhatsApp : courbe arrondie vers le haut-gauche avec une pointe douce
+  // (et non un angle vif), puis retour courbé sur le bord gauche.
+  const tipX = left - tailOut;
+  const tipY = top + tailUp;
+  // épaule : du bord supérieur vers la zone de la pointe (arrondi du raccord)
+  shape.quadraticCurveTo(left + tailTopBase * 0.35, top + tailUp * 0.15, left - tailOut * 0.35, tipY * 0.92 + top * 0.08);
+  // pointe arrondie : petite courbe qui contourne le sommet de la queue
+  shape.quadraticCurveTo(tipX, tipY, tipX + tailOut * 0.45, tipY - tailUp * 0.7);
+  // retour : descente courbée vers le bord gauche de la bulle
+  shape.quadraticCurveTo(left + 0.5, top - 0.5, left, top - tailSideBase);
 
   shape.lineTo(left, bottom + r); // bord gauche
 

@@ -52,9 +52,13 @@ function frameModel(group) {
 
   controls.target.copy(center);
   camera.position.set(center.x, center.y - size.y * 0.15, center.z + dist);
-  camera.near = dist / 100;
-  camera.far = dist * 10;
+  // Plan rapproché volontairement petit + distance mini sur les contrôles : on
+  // évite que le zoom ne « coupe » l'avant des lettres (faces qui disparaissent).
+  camera.near = 0.5;
+  camera.far = dist * 20;
   camera.updateProjectionMatrix();
+  controls.minDistance = Math.max(size.x, size.y) * 0.35;
+  controls.maxDistance = dist * 5;
   controls.update();
 }
 
