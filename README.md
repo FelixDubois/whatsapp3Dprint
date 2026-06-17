@@ -21,6 +21,24 @@ npm run preview  # prévisualise le build
 Le site est 100 % statique (aucun backend) : le dossier `dist/` peut être
 hébergé tel quel sur GitHub Pages, Netlify, Vercel, etc.
 
+## Déploiement avec Docker / Coolify
+
+Le dépôt contient un `Dockerfile` multi-étapes (build Vite avec Node, puis service
+des fichiers statiques via nginx) qui écoute sur le port **80**.
+
+```bash
+docker build -t porte-cle-whatsapp .
+docker run -p 8080:80 porte-cle-whatsapp   # http://localhost:8080
+```
+
+### Sur Coolify
+
+1. **New Resource → Application**, source : ce dépôt Git.
+2. Build Pack : **Dockerfile** (Coolify détecte automatiquement le `Dockerfile`).
+3. Port exposé : **80**.
+4. Déployez : Coolify build l'image et publie le site derrière son reverse proxy
+   (HTTPS/domaine gérés par Coolify).
+
 ## Export pour l'impression 3D
 
 - **Télécharger STL** : un seul fichier, toutes les pièces fusionnées. Idéal pour
