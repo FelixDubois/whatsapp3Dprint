@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { DIMS } from './constants.js';
+
+const CURVE_DIVISIONS = 10; // finesse de tessellation des courbes des glyphes
 
 // Mesure la largeur d'une chaîne pour une police/taille données, sans extrusion
 // (via les shapes 2D), ce qui est suffisant et léger pour le word-wrap.
@@ -14,15 +15,75 @@ function measureWidth(font, text, size) {
   return w;
 }
 
+// Test d'appartenance d'un point à un contour (règle pair/impair).
+function contains(poly, pt) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i];
+    const b = poly[j];
+    if (a.y > pt.y !== b.y > pt.y && pt.x < ((b.x - a.x) * (pt.y - a.y)) / (b.y - a.y) + a.x) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+// Reconstruit les Shapes d'un texte en regroupant CORRECTEMENT les contours en
+// pleins / trous par imbrication (règle pair/impair). Indispensable car la
+// police (issue d'un OTF/CFF) a une orientation de contours qui trompe le
+// regroupement automatique de FontLoader (les intérieurs de o, e, p, 0, 8…
+// n'étaient pas évidés). On force aussi le sens : pleins en CCW, trous en CW.
+function glyphShapes(font, text, size) {
+  const raw = font.generateShapes(text, size);
+  const contours = [];
+  for (const s of raw) {
+    const ep = s.extractPoints(CURVE_DIVISIONS);
+    contours.push(ep.shape);
+    for (const h of ep.holes) contours.push(h);
+  }
+
+  const { isClockWise, area } = THREE.ShapeUtils;
+  const reverse = (p) => p.slice().reverse();
+
+  const items = contours
+    .filter((c) => c.length >= 3)
+    .map((pts) => ({ pts, depth: 0, a: Math.abs(area(pts)) }));
+  // profondeur d'imbrication de chaque contour
+  for (const it of items) {
+    for (const other of items) {
+      if (other !== it && contains(other.pts, it.pts[0])) it.depth++;
+    }
+  }
+  const solids = items.filter((it) => it.depth % 2 === 0);
+  const holes = items.filter((it) => it.depth % 2 === 1);
+
+  return solids.map((sol) => {
+    const outer = isClockWise(sol.pts) ? reverse(sol.pts) : sol.pts; // CCW
+    const shape = new THREE.Shape();
+    shape.setFromPoints(outer);
+    for (const hole of holes) {
+      // rattache le trou au plus petit plein qui le contient (parent direct)
+      const parents = solids.filter((s2) => contains(s2.pts, hole.pts[0]));
+      parents.sort((x, y) => x.a - y.a);
+      if (parents[0] === sol) {
+        const hp = isClockWise(hole.pts) ? hole.pts : reverse(hole.pts); // CW
+        const path = new THREE.Path();
+        path.setFromPoints(hp);
+        shape.holes.push(path);
+      }
+    }
+    return shape;
+  });
+}
+
 // Crée la géométrie 3D extrudée d'une chaîne. La base du texte est légèrement
 // enfoncée dans la plaque (embossSink) pour garantir la fusion, et culmine à
 // baseThickness + embossHeight.
 function createTextGeometry(font, text, size) {
-  const geo = new TextGeometry(text, {
-    font,
-    size,
-    height: DIMS.embossHeight + DIMS.embossSink,
-    curveSegments: 6,
+  const shapes = glyphShapes(font, text, size);
+  const geo = new THREE.ExtrudeGeometry(shapes, {
+    depth: DIMS.embossHeight + DIMS.embossSink,
+    curveSegments: 1, // les shapes sont déjà tessellées en segments
     bevelEnabled: false,
   });
   geo.computeBoundingBox();
