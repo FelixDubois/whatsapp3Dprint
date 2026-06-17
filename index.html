@@ -35,26 +35,19 @@
           <textarea id="in-message" rows="3" maxlength="160">Salut ! Voici ton porte-clé 3D</textarea>
         </label>
 
-        <label class="field">
-          <span>Heure</span>
-          <input id="in-time" type="text" maxlength="5" value="12:34" placeholder="HH:MM" />
-        </label>
-
-        <fieldset class="field photo-field">
-          <legend>Photo de profil</legend>
-          <label class="sub">
-            <span>Initiales</span>
-            <input id="in-initials" type="text" maxlength="2" value="NP" />
+        <div class="field field-row">
+          <label class="col">
+            <span>Heure</span>
+            <input id="in-time" type="text" maxlength="5" value="12:34" placeholder="HH:MM" />
           </label>
-          <label class="sub">
-            <span>Ou une image</span>
-            <input id="in-image" type="file" accept="image/*" />
+          <label class="col">
+            <span>Date</span>
+            <input id="in-date" type="text" maxlength="10" value="17/06/2026" placeholder="JJ/MM/AAAA" />
           </label>
-          <button id="btn-clear-image" type="button" class="link hidden">Retirer l'image</button>
-        </fieldset>
+        </div>
 
         <div class="field">
-          <span class="field-label">Thème</span>
+          <span class="field-label">Couleurs du modèle</span>
           <div class="theme-toggle">
             <button id="theme-light" type="button" class="theme-btn active">☀️ Clair</button>
             <button id="theme-dark" type="button" class="theme-btn">🌙 Sombre</button>

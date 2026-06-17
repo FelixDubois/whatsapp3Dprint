@@ -1,13 +1,16 @@
 # Porte-clé WhatsApp 3D
 
 Générateur web qui transforme un message WhatsApp en porte-clé imprimable en 3D.
-On personnalise le **nom**, le **message**, l'**heure** et la **photo de profil**
-(initiales ou image), on prévisualise le modèle en direct (thème **clair** ou
-**sombre** aux couleurs de WhatsApp), puis on télécharge le fichier **STL**.
+On personnalise le **nom**, le **message**, l'**heure** et la **date**, on
+prévisualise le modèle en direct, puis on télécharge le fichier **STL**.
 
 Le modèle reprend la forme d'une bulle de message : coins arrondis, petite
-**queue** WhatsApp, **pastille photo** à gauche et **trou** en haut à droite pour
-y accrocher un anneau.
+**queue** WhatsApp et **trou** en haut à droite pour y accrocher un anneau. La
+**hauteur de la bulle s'adapte automatiquement à la longueur du message**.
+
+Le texte utilise **TeX Gyre Heros**, un clone libre de Helvetica (la police de
+WhatsApp). Le bouton **Clair / Sombre** change uniquement les **couleurs du
+modèle 3D** (bulle + texte + fond de l'aperçu), pas le style du site.
 
 ## Lancer en local
 
@@ -48,7 +51,7 @@ docker run -p 8080:80 porte-cle-whatsapp   # http://localhost:8080
   pour les imprimantes multi-matériaux (AMS/MMU), à assigner chacun à une couleur.
 
 Le modèle est conçu pour l'impression FDM (1 unité = 1 mm) : trou réellement
-traversant, texte et photo soudés à la plaque, parois ≥ 2 mm.
+traversant, texte soudé à la plaque, parois ≥ 2 mm.
 
 ## Architecture
 
@@ -56,19 +59,17 @@ traversant, texte et photo soudés à la plaque, parois ≥ 2 mm.
 index.html              Page unique (aperçu + panneau de personnalisation)
 src/
   main.js               Scène Three.js, chargement des polices, boucle de rendu, câblage UI
-  ui.js                 Formulaire, régénération debouncée, gestion image/thème
-  theme.js              Palettes de couleurs WhatsApp (clair/sombre)
-  style.css             Styles de l'interface
+  ui.js                 Formulaire, régénération debouncée, thème du modèle
+  theme.js              Couleurs du modèle 3D (clair/sombre)
+  style.css             Styles (fixes) de l'interface
   geometry/
-    constants.js        Dimensions (mm)
-    bubble.js           Bulle : coins arrondis + queue + trou (ExtrudeGeometry)
-    profile.js          Pastille photo (disque débordant)
-    text.js             Nom / message (word-wrap) / heure / initiales (TextGeometry)
-    assemble.js         Assemblage en groupes de couleur + matériaux
+    constants.js        Dimensions (mm) ; hauteur min/max de la bulle
+    bubble.js           Bulle : coins arrondis + queue + trou, hauteur paramétrable
+    text.js             Mesure du contenu (-> hauteur) + placement (nom / message / date+heure)
+    assemble.js         Calcul de la hauteur, assemblage en groupes de couleur + matériaux
   export/
     stl.js              Export STL binaire (unique + par couleur)
-    image-relief.js     Image téléversée -> relief (heightmap) dans la pastille
-public/fonts/           Polices Droid Sans (couverture des accents français)
+public/fonts/           TeX Gyre Heros (clone Helvetica) en typeface.json
 ```
 
 Construit avec [Three.js](https://threejs.org/) et [Vite](https://vitejs.dev/).

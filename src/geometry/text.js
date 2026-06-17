@@ -48,18 +48,68 @@ function wrapText(font, text, size, maxWidth, maxLines) {
   return lines;
 }
 
-// Construit l'ensemble des géométries de texte (nom, message, heure) positionnées
-// dans le repère de la bulle. Retourne un tableau de BufferGeometry prêtes à être
-// fusionnées/affichées (toutes à la même hauteur Z).
-export function buildTexts(fontRegular, fontBold, bounds, params) {
-  const { left, right, top, bottom } = bounds;
-  const { padTop, padRight, padBottom, padLeftFromProfile } = DIMS;
+// Tailles et espacements (mm) du contenu textuel — fixes : c'est la HAUTEUR de
+// la bulle qui s'adapte au nombre de lignes, pas la taille du texte.
+const NAME_SIZE = 5;
+const MSG_SIZE = 3.4;
+const MSG_LINE_HEIGHT = MSG_SIZE * 1.4;
+const STAMP_SIZE = 3;
+const GAP_AFTER_NAME = 2.5;
+const GAP_BEFORE_STAMP = 2.5;
 
-  const interiorLeft = left + padLeftFromProfile + 2;
+// PHASE 1 — Mesure du contenu : crée les géométries de texte (nom, lignes de
+// message, date+heure) à taille fixe et calcule la hauteur totale nécessaire.
+// La largeur étant fixe, le nom et l'horodatage sont mis à l'échelle s'ils
+// débordent ; le message est découpé en autant de lignes que nécessaire.
+// Retourne un objet `content` consommé par placeTexts(), plus `totalHeight`.
+export function measureContent(fontRegular, fontBold, interiorWidth, params) {
+  // Nom (gras)
+  let nameGeo = null;
+  if (params.name) {
+    nameGeo = createTextGeometry(fontBold, params.name, NAME_SIZE);
+    const w = nameGeo.boundingBox.max.x - nameGeo.boundingBox.min.x;
+    if (w > interiorWidth) nameGeo.scale(interiorWidth / w, interiorWidth / w, 1);
+  }
+
+  // Message : autant de lignes que nécessaire (pas de limite verticale ici)
+  let lineGeos = [];
+  if (params.message) {
+    const lines = wrapText(fontRegular, params.message, MSG_SIZE, interiorWidth, 999);
+    lineGeos = lines.map((l) => createTextGeometry(fontRegular, l, MSG_SIZE));
+  }
+
+  // Date + heure (une seule ligne)
+  let stampGeo = null;
+  const stampParts = [params.date, params.time].filter(Boolean);
+  if (stampParts.length > 0) {
+    stampGeo = createTextGeometry(fontRegular, stampParts.join('   '), STAMP_SIZE);
+    const w = stampGeo.boundingBox.max.x - stampGeo.boundingBox.min.x;
+    if (w > interiorWidth) stampGeo.scale(interiorWidth / w, interiorWidth / w, 1);
+  }
+
+  // Hauteur de contenu = somme des blocs présents + espacements
+  let totalHeight = 0;
+  if (nameGeo) totalHeight += NAME_SIZE;
+  if (lineGeos.length) {
+    totalHeight += (nameGeo ? GAP_AFTER_NAME : 0) + lineGeos.length * MSG_LINE_HEIGHT;
+  }
+  if (stampGeo) {
+    totalHeight += (nameGeo || lineGeos.length ? GAP_BEFORE_STAMP : 0) + STAMP_SIZE;
+  }
+
+  return { nameGeo, lineGeos, stampGeo, totalHeight };
+}
+
+// PHASE 2 — Placement : positionne les géométries mesurées dans le repère de la
+// bulle (dont la hauteur a été calculée à partir de content.totalHeight).
+export function placeTexts(content, bounds) {
+  const { left, right, top, bottom } = bounds;
+  const { padTop, padRight, padBottom, padLeft } = DIMS;
+
+  const interiorLeft = left + padLeft;
   const interiorRight = right - padRight;
   const interiorTop = top - padTop;
   const interiorBottom = bottom + padBottom;
-  const interiorWidth = interiorRight - interiorLeft;
 
   const zOffset = DIMS.baseThickness - DIMS.embossSink;
   const geometries = [];
@@ -80,76 +130,18 @@ export function buildTexts(fontRegular, fontBold, bounds, params) {
     geometries.push(geo);
   };
 
-  // --- Nom (gras) ---
-  if (params.name) {
-    let nameSize = 5;
-    let nameGeo = createTextGeometry(fontBold, params.name, nameSize);
-    let w = nameGeo.boundingBox.max.x - nameGeo.boundingBox.min.x;
-    if (w > interiorWidth) {
-      const s = interiorWidth / w;
-      nameGeo.scale(s, s, 1);
-      nameSize *= s;
-    }
-    place(nameGeo, { x: interiorLeft, y: interiorTop, align: 'tl' });
+  let y = interiorTop;
+  if (content.nameGeo) {
+    place(content.nameGeo, { x: interiorLeft, y, align: 'tl' });
+    y -= NAME_SIZE + (content.lineGeos.length ? GAP_AFTER_NAME : 0);
   }
-
-  // --- Heure (bas-droite) ---
-  let timeBottomGap = 0;
-  if (params.time) {
-    const timeSize = 3;
-    const timeGeo = createTextGeometry(fontRegular, params.time, timeSize);
-    place(timeGeo, { x: interiorRight, y: interiorBottom, align: 'br' });
-    timeBottomGap = timeSize + 1.5;
+  for (const geo of content.lineGeos) {
+    place(geo, { x: interiorLeft, y, align: 'tl' });
+    y -= MSG_LINE_HEIGHT;
   }
-
-  // --- Message (multi-lignes, word-wrap) ---
-  if (params.message) {
-    const nameBlock = params.name ? 5 + 2.5 : 0; // hauteur nom + marge
-    const msgTop = interiorTop - nameBlock;
-    const msgBottom = interiorBottom + timeBottomGap;
-    const available = msgTop - msgBottom;
-
-    // On réduit la taille jusqu'à ce que les lignes tiennent verticalement.
-    let size = 3.6;
-    const minSize = 2.2;
-    let lines = [];
-    let lineHeight = 0;
-    while (size >= minSize) {
-      lineHeight = size * 1.35;
-      const maxLines = Math.max(1, Math.floor(available / lineHeight));
-      lines = wrapText(fontRegular, params.message, size, interiorWidth, maxLines);
-      if (lines.length * lineHeight <= available) break;
-      size -= 0.2;
-    }
-
-    let y = msgTop;
-    for (const line of lines) {
-      const geo = createTextGeometry(fontRegular, line, size);
-      place(geo, { x: interiorLeft, y, align: 'tl' });
-      y -= lineHeight;
-    }
+  if (content.stampGeo) {
+    place(content.stampGeo, { x: interiorRight, y: interiorBottom, align: 'br' });
   }
 
   return geometries;
-}
-
-// Crée les initiales centrées dans la pastille photo.
-export function buildInitials(fontBold, cx, cy, radius, initials) {
-  if (!initials) return null;
-  const text = initials.slice(0, 2).toUpperCase();
-  let size = radius * 0.9;
-  let geo = createTextGeometry(fontBold, text, size);
-  geo.computeBoundingBox();
-  const w = geo.boundingBox.max.x - geo.boundingBox.min.x;
-  const maxW = radius * 1.3;
-  if (w > maxW) {
-    const s = maxW / w;
-    geo.scale(s, s, 1);
-    geo.computeBoundingBox();
-  }
-  const bb = geo.boundingBox;
-  const tx = cx - (bb.min.x + bb.max.x) / 2;
-  const ty = cy - (bb.min.y + bb.max.y) / 2;
-  geo.translate(tx, ty, DIMS.baseThickness - DIMS.embossSink);
-  return geo;
 }

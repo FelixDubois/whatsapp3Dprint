@@ -140,45 +140,23 @@ textarea:focus {
   border-color: var(--accent);
 }
 
-.photo-field {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-  margin: 0 0 16px;
+/* Heure + date côte à côte */
+.field-row {
+  display: flex;
+  gap: 12px;
 }
-.photo-field legend {
+.field-row .col {
+  flex: 1;
+  display: block;
+}
+.field-row .col > span {
+  display: block;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--muted);
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 0 6px;
-}
-.sub {
-  display: block;
-  margin-bottom: 10px;
-}
-.sub > span {
-  display: block;
-  font-size: 0.8rem;
-  margin-bottom: 4px;
-  color: var(--muted);
-}
-input[type='file'] {
-  width: 100%;
-  font-size: 0.85rem;
-  color: var(--panel-text);
-}
-.link {
-  background: none;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  font-size: 0.82rem;
-  padding: 0;
-}
-.hidden {
-  display: none;
 }
 
 /* Bascule de thème */

@@ -8,12 +8,14 @@ import { DIMS } from './constants.js';
 // Repère : la bulle est tracée dans le plan XY, centrée horizontalement sur 0.
 // Origine telle que le corps occupe x ∈ [left, right], y ∈ [bottom, top].
 //
+// La hauteur est passée en paramètre (calculée selon la longueur du message)
+// afin que la bulle s'adapte au contenu, comme une vraie bulle WhatsApp.
+//
 // Retourne { geometry, bounds } où bounds décrit les limites utiles pour le
-// placement de la photo et du texte.
-export function buildBubble() {
+// placement du texte.
+export function buildBubble(height) {
   const {
     bubbleWidth: W,
-    bubbleHeight: H,
     cornerRadius: r,
     baseThickness,
     tailTopBase,
@@ -25,6 +27,7 @@ export function buildBubble() {
     holeMarginTop,
   } = DIMS;
 
+  const H = height || DIMS.minBubbleHeight;
   const left = -W / 2;
   const right = W / 2;
   const bottom = -H / 2;

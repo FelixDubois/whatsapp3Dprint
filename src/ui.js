@@ -1,6 +1,5 @@
 // Gestion du formulaire : lecture des valeurs, régénération debouncée et
-// branchement des boutons. L'image téléversée est conservée dans l'état JS
-// (pas dans le DOM) et fournie via getImage().
+// branchement des boutons.
 
 export function debounce(fn, ms = 200) {
   let t;
@@ -15,9 +14,7 @@ export function setupControls(handlers) {
     name: document.getElementById('in-name'),
     message: document.getElementById('in-message'),
     time: document.getElementById('in-time'),
-    initials: document.getElementById('in-initials'),
-    image: document.getElementById('in-image'),
-    clearImage: document.getElementById('btn-clear-image'),
+    date: document.getElementById('in-date'),
     themeLight: document.getElementById('theme-light'),
     themeDark: document.getElementById('theme-dark'),
     export: document.getElementById('btn-export'),
@@ -25,23 +22,21 @@ export function setupControls(handlers) {
   };
 
   let theme = 'light';
-  let image = null; // HTMLImageElement ou null
 
   const readParams = () => ({
     name: el.name.value.trim(),
     message: el.message.value.trim(),
     time: el.time.value.trim(),
-    initials: el.initials.value.trim(),
+    date: el.date.value.trim(),
     theme,
-    image,
   });
 
   const debouncedChange = debounce(() => handlers.onChange(readParams()), 200);
-  for (const input of [el.name, el.message, el.time, el.initials]) {
+  for (const input of [el.name, el.message, el.time, el.date]) {
     input.addEventListener('input', debouncedChange);
   }
 
-  // Thème
+  // Thème (couleurs du modèle 3D uniquement)
   const setTheme = (t) => {
     theme = t;
     el.themeLight.classList.toggle('active', t === 'light');
@@ -50,21 +45,6 @@ export function setupControls(handlers) {
   };
   el.themeLight.addEventListener('click', () => setTheme('light'));
   el.themeDark.addEventListener('click', () => setTheme('dark'));
-
-  // Image
-  el.image.addEventListener('change', async (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    image = await handlers.onImage(file);
-    el.clearImage.classList.remove('hidden');
-    handlers.onChange(readParams());
-  });
-  el.clearImage.addEventListener('click', () => {
-    image = null;
-    el.image.value = '';
-    el.clearImage.classList.add('hidden');
-    handlers.onChange(readParams());
-  });
 
   // Export
   el.export.addEventListener('click', () => handlers.onExport());

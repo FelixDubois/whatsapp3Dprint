@@ -32,12 +32,11 @@ export function exportSingleStl(exportParts, filename = 'porte-cle-whatsapp.stl'
   merged.dispose();
 }
 
-// Exporte un fichier STL par couleur (base / photo / texte) pour les imprimantes
+// Exporte un fichier STL par couleur (base / texte) pour les imprimantes
 // multi-matériaux (AMS/MMU).
 export function exportPerColorStl(exportParts) {
   const map = {
     base: 'porte-cle-base.stl',
-    photo: 'porte-cle-photo.stl',
     texte: 'porte-cle-texte.stl',
   };
   for (const [key, name] of Object.entries(map)) {

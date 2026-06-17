@@ -3,8 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { buildModel, applyModelTheme } from './geometry/assemble.js';
 import { exportSingleStl, exportPerColorStl } from './export/stl.js';
-import { loadImageFile } from './export/image-relief.js';
-import { THEMES, applyUiTheme } from './theme.js';
+import { THEMES } from './theme.js';
 import { setupControls } from './ui.js';
 
 const wrap = document.getElementById('canvas-wrap');
@@ -33,7 +32,6 @@ scene.add(fill);
 // --- État ---
 let fonts = null;
 let current = null; // { group, materials, exportParts }
-let currentTheme = 'light';
 
 function disposeCurrent() {
   if (!current) return;
@@ -68,10 +66,10 @@ function regenerate(params, { reframe = false } = {}) {
   if (reframe) frameModel(current.group);
 }
 
+// Le thème ne concerne QUE le modèle 3D : couleurs des matériaux + fond de la
+// scène. Le style du site reste fixe.
 function setSceneTheme(themeName) {
-  currentTheme = themeName;
   scene.background = new THREE.Color(THEMES[themeName].sceneBackground);
-  applyUiTheme(themeName);
   if (current) applyModelTheme(current.materials, themeName);
 }
 
@@ -96,7 +94,6 @@ function animate() {
 const { readParams } = setupControls({
   onChange: (params) => regenerate(params),
   onThemeChange: (t) => setSceneTheme(t),
-  onImage: (file) => loadImageFile(file),
   onExport: () => current && exportSingleStl(current.exportParts),
   onExportColor: () => current && exportPerColorStl(current.exportParts),
 });
@@ -108,8 +105,8 @@ function loadFont(url) {
 }
 
 Promise.all([
-  loadFont('./fonts/droid_sans_regular.typeface.json'),
-  loadFont('./fonts/droid_sans_bold.typeface.json'),
+  loadFont('./fonts/heros_regular.typeface.json'),
+  loadFont('./fonts/heros_bold.typeface.json'),
 ])
   .then(([regular, bold]) => {
     fonts = { regular, bold };
