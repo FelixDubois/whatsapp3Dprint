@@ -1,0 +1,24 @@
+{
+  "name": "whatsapp3dprint",
+  "version": "1.0.0",
+  "description": "Générateur de porte-clé 3D en forme de message WhatsApp",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:46685/git/FelixDubois/whatsapp3Dprint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.21"
+  }
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Porte-clé WhatsApp 3D</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <span class="logo">💬</span>
+        <h1>Porte-clé WhatsApp 3D</h1>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- Aperçu 3D : élément principal -->
+      <section class="viewer">
+        <div id="canvas-wrap"></div>
+        <p class="hint">Glissez pour faire pivoter · molette pour zoomer</p>
+      </section>
+
+      <!-- Panneau de génération -->
+      <aside class="panel">
+        <h2>Personnalisez votre message</h2>
+
+        <label class="field">
+          <span>Nom Prénom</span>
+          <input id="in-name" type="text" maxlength="22" value="Nom Prénom" />
+        </label>
+
+        <label class="field">
+          <span>Message</span>
+          <textarea id="in-message" rows="3" maxlength="160">Salut ! Voici ton porte-clé 3D</textarea>
+        </label>
+
+        <label class="field">
+          <span>Heure</span>
+          <input id="in-time" type="text" maxlength="5" value="12:34" placeholder="HH:MM" />
+        </label>
+
+        <fieldset class="field photo-field">
+          <legend>Photo de profil</legend>
+          <label class="sub">
+            <span>Initiales</span>
+            <input id="in-initials" type="text" maxlength="2" value="NP" />
+          </label>
+          <label class="sub">
+            <span>Ou une image</span>
+            <input id="in-image" type="file" accept="image/*" />
+          </label>
+          <button id="btn-clear-image" type="button" class="link hidden">Retirer l'image</button>
+        </fieldset>
+
+        <div class="field">
+          <span class="field-label">Thème</span>
+          <div class="theme-toggle">
+            <button id="theme-light" type="button" class="theme-btn active">☀️ Clair</button>
+            <button id="theme-dark" type="button" class="theme-btn">🌙 Sombre</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btn-export" type="button" class="primary">Télécharger STL</button>
+          <button id="btn-export-color" type="button" class="secondary">
+            Télécharger STL par couleur
+          </button>
+        </div>
+        <p class="note">
+          Le STL unique convient à toute imprimante (couleurs via changement de
+          filament par hauteur). L'export par couleur fournit un fichier par
+          matière pour les imprimantes multi-matériaux (AMS/MMU).
+        </p>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
